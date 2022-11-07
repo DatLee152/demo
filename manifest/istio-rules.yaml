@@ -1,0 +1,51 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: ingress-gateway-configuration
+spec:
+  selector:
+    istio: ingressgateway # use Istio default gateway implementation
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "*"   
+---
+kind: VirtualService
+apiVersion: networking.istio.io/v1alpha3
+metadata:
+  name: nginx-webapp-service
+  namespace: default
+spec:
+  hosts:      
+    - "*"
+  gateways:
+    - ingress-gateway-configuration
+  http:
+    - route:
+      - destination:
+          host: nginx-webapp-service
+          subset: original
+        weight: 90
+      - destination:
+          host: nginx-webapp-service
+          subset: canary
+        weight: 10
+
+---
+kind: DestinationRule
+apiVersion: networking.istio.io/v1alpha3
+metadata:
+  name: nginx-webapp
+  namespace: default
+spec:
+  host: nginx-webapp-service
+  subsets:
+    - labels:
+        version: v1.0
+      name: original
+    - labels:
+        version: v2.0
+      name: canary
