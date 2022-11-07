@@ -16,7 +16,7 @@ spec:
 kind: VirtualService
 apiVersion: networking.istio.io/v1alpha3
 metadata:
-  name: nginx-webapp-service
+  name: nginx-webapp-vs
   namespace: default
 spec:
   hosts:      
@@ -24,28 +24,11 @@ spec:
   gateways:
     - ingress-gateway-configuration
   http:
-    - route:
-      - destination:
-          host: nginx-webapp-service
-          subset: original
-        weight: 90
-      - destination:
-          host: nginx-webapp-service
-          subset: canary
-        weight: 10
-
----
-kind: DestinationRule
-apiVersion: networking.istio.io/v1alpha3
-metadata:
-  name: nginx-webapp
-  namespace: default
-spec:
-  host: nginx-webapp-service
-  subsets:
-    - labels:
-        version: v1.0
-      name: original
-    - labels:
-        version: v2.0
-      name: canary
+  - name: primary
+    route:
+    - destination:
+        host: nginx-rollout-stable
+      weight: 100
+    - destination:
+        host: nginx-rollout-canary
+      weight: 0

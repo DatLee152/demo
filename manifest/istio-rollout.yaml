@@ -1,0 +1,56 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: istio-rollout
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      annotations:
+        sidecar.istio.io/inject: "true"
+      labels:
+        app: nginx
+        version: v1.0
+    spec:
+      containers:
+      - name: nginx
+        image: letiendat152/demo:v1.0
+        ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        resources:
+          requests:
+            memory: 32Mi
+            cpu: 5m
+  strategy:
+    canary:
+      canaryService: nginx-rollout-canary
+      stableService: nginx-rollout-stable
+      trafficRouting:
+        istio:
+          virtualService:
+            name: nginx-webapp-vs
+            routes:
+            - primary
+      steps:
+      - setWeight: 10
+      - pause: {}         # pause indefinitely
+      - setWeight: 20
+      - pause: {duration: 20s}
+      - setWeight: 30
+      - pause: {duration: 20s}
+      - setWeight: 40
+      - pause: {duration: 20s}
+      - setWeight: 50
+      - pause: {duration: 20s}
+      - setWeight: 60
+      - pause: {duration: 20s}
+      - setWeight: 70
+      - pause: {duration: 20s}
+      - setWeight: 80
+      - pause: {duration: 20s}
+      - setWeight: 90
+      - pause: {duration: 20s}
